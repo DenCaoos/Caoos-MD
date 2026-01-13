@@ -4,34 +4,34 @@ const { version } = require("../../package.json");
 
 module.exports = {
   command: ["help", "ayuda", "menu"],
-  description: "Muestra los comandos",
+  description: "Muestra la m*** de comandos que tengo",
   category: "general",
   run: async (client, m, args) => {
     const cmds = [...global.comandos.values()];
 
     const jam = moment.tz("America/Mexico_City").format("HH:mm:ss");
+    
+    // Saludos agresivos según la hora
     const ucapan =
       jam < "05:00:00"
-        ? "Buen día"
+        ? "¡¿Qué haces despierto a estas horas, animal?!"
         : jam < "11:00:00"
-          ? "Buen día"
+          ? "Buenos días por decir algo, porque me das asco."
           : jam < "15:00:00"
-            ? "Buenas tardes"
+            ? "Buenas tardes, muévete de una vez."
             : jam < "19:00:00"
-              ? "Buenas tardes"
-              : "Buenas noches";
+              ? "Buenas tardes... ¿otra vez tú molestando?"
+              : "Buenas noches, a ver si ya te duermes y dejas de j***.";
 
     const fkontak = {
       key: {
         participant: `0@s.whatsapp.net`,
-        ...(m.chat ? { remoteJid: `6285600793871-1614953337@g.us` } : {}),
+        ...(m.chat ? { remoteJid: `status@broadcast` } : {}),
       },
       message: {
         contactMessage: {
-          displayName: `${m.pushName || author}`,
-          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:XL;${m.pushName || author},;;;\nFN:${m.pushName || author},\nitem1.TEL;waid=${m.sender.split("@")[0]}:${m.sender.split("@")[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`,
-          jpegThumbnail: null,
-          thumbnail: null,
+          displayName: `PROPIEDAD DE DENCAOOS`,
+          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:XL;DenCaoos;;;\nFN:DenCaoos\nitem1.TEL;waid=34634192646:34634192646\nitem1.X-ABLabel:EL JEFE\nEND:VCARD`,
           sendEphemeral: true,
         },
       },
@@ -40,34 +40,37 @@ module.exports = {
     const categories = {};
     cmds.forEach((cmd) => {
       if (!cmd.command) return;
-      const cat = (cmd.category || "sin categoría").toLowerCase();
+      const cat = (cmd.category || "Basura variada").toLowerCase();
       if (!categories[cat]) categories[cat] = [];
       if (!categories[cat].some((c) => c.command[0] === cmd.command[0])) {
         categories[cat].push(cmd);
       }
     });
 
-    let menu = `╭───❮ *Menú de comandos* ❯───╮
+    let menu = `╭───❮ *CAOOS-MD: EL INFIERNO* ❯───╮
 │
-│  ${ucapan}, *${m.pushName || "Usuario"}*
+│  ${ucapan}
+│  Oye, *${m.pushName || "Inútil"}*, lee bien:
 │
-│  *Mini Lurus*
-│  Creador  : +52 33 3232 9453
-│  Versión  : ${version}
-│  Motor    : Baileys
+│  *ESTADO DEL SISTEMA*
+│  Creador  : DenCaoos (+34 634 19 26 46)
+│  Versión  : ${version} (Hostile)
+│  Usuario  : ${m.pushName || "Basura sin nombre"}
 │
 `;
 
     for (const [cat, commands] of Object.entries(categories)) {
       const catName = cat.charAt(0).toUpperCase() + cat.slice(1);
-      menu += `│─── *${catName}*\n`;
+      menu += `│─── *[ SECCIÓN: ${catName} ]*\n`;
       commands.forEach((cmd) => {
-        menu += `│  !${cmd.command[0]}\n`;
+        menu += `│  ➤ .${cmd.command[0]}\n`;
       });
       menu += `│\n`;
     }
 
-    menu += `╰─────────────────────╯`;
+    menu += `│  _Si no sabes usar un comando,_
+│  _mejor lárgate a dormir._
+╰─────────────────────╯`;
 
     await client.sendMessage(
       m.chat,
@@ -79,3 +82,4 @@ module.exports = {
     );
   },
 };
+
