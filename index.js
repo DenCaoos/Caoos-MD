@@ -1,14 +1,10 @@
 /**
- * ================================
- *        Mini Lurus - WaBot
- * ================================
- * Creado por: Carlos Alexis (Zam)
- * Año: 2025
- * Librería: Baileys
- * 
- * Nota: No borres los créditos, ni te pongas
- * créditos que no son tuyos, respeta el trabajo.
- * ================================
+ * ========================================================
+ * CAOOS-MD - EL BOT MÁS AGRESIVO DE WHATSAPP
+ * ========================================================
+ * Creador: DenCaoos (@DenCaoos)
+ * Año: 2026 | No toques los créditos o te vas al carajo.
+ * ========================================================
  **/
 
 require("./settings");
@@ -27,160 +23,95 @@ const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
 const os = require("os");
-const qrcode = require("qrcode-terminal");
-const parsePhoneNumber = require("awesome-phonenumber");
 const { smsg } = require("./lib/message");
-const { app, server } = require("./lib/server");
 const { Boom } = require("@hapi/boom");
 const { exec } = require("child_process");
 
 const print = (label, value) =>
   console.log(
-    `${chalk.green.bold("║")} ${chalk.cyan.bold(label.padEnd(16))}${chalk.magenta.bold(":")} ${value}`,
+    `${chalk.red.bold("┃")} ${chalk.white.bold(label.padEnd(16))}${chalk.red.bold("»")} ${chalk.gray(value)}`,
   );
+
 const question = (text) => {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
   return new Promise((resolve) => {
-    rl.question(text, resolve);
+    rl.question(text, (ans) => { rl.close(); resolve(ans); });
   });
 };
-const usePairingCode = true;
 
 const log = {
-  info: (msg) => console.log(chalk.bgBlue.white.bold(`INFO`), chalk.white(msg)),
-  success: (msg) =>
-    console.log(chalk.bgGreen.white.bold(`SUCCESS`), chalk.greenBright(msg)),
-  warn: (msg) =>
-    console.log(
-      chalk.bgYellowBright.blueBright.bold(`WARNING`),
-      chalk.yellow(msg),
-    ),
-  warning: (msg) =>
-    console.log(chalk.bgYellowBright.red.bold(`WARNING`), chalk.yellow(msg)),
-  error: (msg) =>
-    console.log(chalk.bgRed.white.bold(`ERROR`), chalk.redBright(msg)),
+  info: (msg) => console.log(chalk.bgCyan.black.bold(` CAOOS-MD `), chalk.cyan(`[!] ${msg}`)),
+  success: (msg) => console.log(chalk.bgGreen.black.bold(` LISTO `), chalk.greenBright(`[✓] ${msg}`)),
+  warn: (msg) => console.log(chalk.bgYellow.black.bold(` ¿ERES TONTO? `), chalk.yellow(`[?] ${msg}`)),
+  error: (msg) => console.log(chalk.bgRed.white.bold(` ¡BASURA! `), chalk.redBright(`[X] ${msg}`)),
 };
 
-const userInfoSyt = () => {
-  try {
-    return os.userInfo().username;
-  } catch (e) {
-    return process.env.USER || process.env.USERNAME || "desconocido";
-  }
-};
+// LIMPIEZA Y BANNER HOSTIL
+console.clear();
+console.log(chalk.red.bold(`
+ ██████╗ █████╗  ██████╗  ██████╗ ███████╗    ███╗   ███╗██████╗ 
+██╔════╝██╔══██╗██╔═══██╗██╔═══██╗██╔════╝    ████╗ ████║██╔══██╗
+██║     ███████║██║   ██║██║   ██║███████╗    ██╔████╔██║██║  ██║
+██║     ██╔══██║██║   ██║██║   ██║╚════██║    ██║╚██╔╝██║██║  ██║
+╚██████╗██║  ██║╚██████╔╝╚██████╔╝███████║    ██║ ╚═╝ ██║██████╔╝
+ ╚═════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚══════╝    ╚═╝     ╚═╝╚═════╝ 
+    >>> CREADO POR DenCaoos | IG: @DenCaoos <<<`));
 
-console.log(
-  chalk.yellow.bold(
-    `╔═════[${`${chalk.yellowBright(userInfoSyt())}${chalk.white.bold("@")}${chalk.yellowBright(os.hostname())}`}]═════`,
-  ),
-);
-print("OS", `${os.platform()} ${os.release()} ${os.arch()}`);
-print(
-  "Actividad",
-  `${Math.floor(os.uptime() / 3600)} h ${Math.floor((os.uptime() % 3600) / 60)} m`,
-);
-print("Shell", process.env.SHELL || process.env.COMSPEC || "desconocido");
-print("CPU", os.cpus()[0]?.model.trim() || "unknown");
-print(
-  "Memoria",
-  `${(os.freemem() / 1024 / 1024).toFixed(0)} MiB / ${(os.totalmem() / 1024 / 1024).toFixed(0)} MiB`,
-);
-print("Script version", `v${require("./package.json").version}`);
-print("Node.js", process.version);
-print("Baileys", `WhiskeySockets/baileys`);
-print(
-  "Fecha & Tiempo",
-  new Date().toLocaleString("en-US", {
-    timeZone: "America/Mexico_City",
-    hour12: false,
-  }),
-);
-console.log(chalk.yellow.bold("╚" + "═".repeat(30)));
+print("ESTADO", "Inyectando código de m***...");
+print("CPU", os.cpus()[0]?.model.trim());
+print("RAM", `${(os.freemem() / 1024 / 1024).toFixed(0)}MB Libres de basura`);
+print("VERSIÓN", `CAOOS-MD v${require("./package.json").version}`);
+print("NODE.JS", process.version);
+print("FECHA", new Date().toLocaleString("es-ES", { timeZone: "America/Mexico_City" }));
+console.log(chalk.red.bold("╚" + "═".repeat(50)));
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState(global.sessionName);
   const { version } = await fetchLatestBaileysVersion();
 
-  console.info = () => {};
-  console.debug = () => {};
   const client = makeWASocket({
     version,
     logger: pino({ level: "silent" }),
     printQRInTerminal: false,
-    browser: ["Linux", "Opera"],
+    browser: ["Caoos-MD", "Safari", "1.0.0"],
     auth: state,
   });
 
+  // VINCULACIÓN POR CÓDIGO (SOLO PARA MI SEÑOR)
   if (!client.authState.creds.registered) {
+    console.log(chalk.bgRed.white.bold("\n ¡MUEVE TU TRASERO O NO HAGO NADA! "));
     const phoneNumber = await question(
-      log.warn("Ingrese su número de WhatsApp\n") +
-        log.info("Ejemplo: 5212345678900\n"),
+      log.warn("Escribe tu maldito número de WhatsApp:\n") +
+      chalk.red(" > ")
     );
     try {
-      log.info("Solicitando código de emparejamiento...");
-      const pairing = await client.requestPairingCode(phoneNumber, "1234MINI");
-      log.success(
-        `Código de emparejamiento: ${chalk.cyanBright(pairing)} (expira en 15s)`,
-      );
+      const pairing = await client.requestPairingCode(phoneNumber.trim().replace(/[^0-9]/g, ''), "CAOOSMD7");
+      console.log(chalk.red("\n ──────────────────────────────────────────────────"));
+      console.log(chalk.white("  TU CÓDIGO DE ACCESO: ") + chalk.black.bgWhite.bold(`  ${pairing}  `));
+      console.log(chalk.red(" ──────────────────────────────────────────────────\n"));
+      log.info("Ponlo rápido antes de que me aburra de servirte.");
     } catch (err) {
-      log.error("Error al solicitar el código de emparejamiento:", err);
-      exec("rm -rf ./lurus_session/*");
+      log.error("Hiciste algo mal, inútil. Borrando basura de sesión...");
+      exec(`rm -rf ./${global.sessionName}/*`);
       process.exit(1);
     }
   }
 
   await global.loadDatabase();
-  console.log(chalk.yellow("Base de datos cargada correctamente."));
-
-  client.sendText = (jid, text, quoted = "", options) =>
-    client.sendMessage(jid, { text, ...options }, { quoted });
+  log.success("Base de datos cargada. Ya puedes empezar a molestar a la gente.");
 
   client.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === "close") {
       const reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-      if (reason === DisconnectReason.connectionLost) {
-        log.warning(
-          "Se perdió la conexión al servidor, intento reconectarme..",
-        );
-        startBot();
-      } else if (reason === DisconnectReason.connectionClosed) {
-        log.warning("Conexión cerrada, intentando reconectarse...");
-        startBot();
-      } else if (reason === DisconnectReason.restartRequired) {
-        log.warning("Es necesario reiniciar..");
-        startBot();
-      } else if (reason === DisconnectReason.timedOut) {
-        log.warning("Tiempo de conexión agotado, intentando reconectarse...");
-        startBot();
-      } else if (reason === DisconnectReason.badSession) {
-        log.warning("Eliminar sesión y escanear nuevamente...");
-        startBot();
-      } else if (reason === DisconnectReason.connectionReplaced) {
-        log.warning("Primero cierre la sesión actual...");
-      } else if (reason === DisconnectReason.loggedOut) {
-        log.warning("Escanee nuevamente y ejecute...");
-        exec("rm -rf ./lurus_session/*");
-        process.exit(1);
-      } else if (reason === DisconnectReason.forbidden) {
-        log.error("Error de conexión, escanee nuevamente y ejecute...");
-        exec("rm -rf ./lurus_session/*");
-        process.exit(1);
-      } else if (reason === DisconnectReason.multideviceMismatch) {
-        log.warning("Inicia nuevamente");
-        exec("rm -rf ./lurus_session/*");
-        process.exit(0);
-      } else {
-        client.end(
-          `Motivo de desconexión desconocido : ${reason}|${connection}`,
-        );
-      }
+      log.warn(`Se cerró esta m*** de conexión (Razón: ${reason}). Reconectando...`);
+      startBot();
     }
     if (connection === "open") {
-      log.success("Su conexión fue exitosa");
+      log.success("¡CAOOS-MD ESTÁ VIVO! Tiemblen, par de idiotas.");
     }
   });
 
@@ -188,15 +119,15 @@ async function startBot() {
     try {
       let m = messages[0];
       if (!m.message) return;
-      m.message =
-        Object.keys(m.message)[0] === "ephemeralMessage"
-          ? m.message.ephemeralMessage.message
-          : m.message;
+      m.message = Object.keys(m.message)[0] === "ephemeralMessage" ? m.message.ephemeralMessage.message : m.message;
       if (m.key && m.key.remoteJid === "status@broadcast") return;
+      
       m = smsg(client, m);
+      
+      // Aquí el bot decide si ser amable con @DenCaoos o un asco con los demás
       require("./main")(client, m, messages);
     } catch (err) {
-      console.log(err);
+      log.error("Fallo al procesar un mensaje estúpido: " + err);
     }
   });
 
@@ -204,9 +135,7 @@ async function startBot() {
     if (!jid) return jid;
     if (/:\d+@/gi.test(jid)) {
       const decode = jidDecode(jid) || {};
-      return decode.user && decode.server
-        ? decode.user + "@" + decode.server
-        : jid;
+      return decode.user && decode.server ? decode.user + "@" + decode.server : jid;
     }
     return jid;
   };
@@ -215,10 +144,13 @@ async function startBot() {
 }
 
 startBot();
+
+// MONITOR DE CAMBIOS AGRESIVO
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
   fs.unwatchFile(file);
-  console.log(chalk.yellowBright(`Se actualizo el archivo ${__filename}`));
+  console.log(chalk.red.bold(`\n[!] @DenCaoos actualizó el núcleo. Recargando basura...\n`));
   delete require.cache[file];
   require(file);
 });
+

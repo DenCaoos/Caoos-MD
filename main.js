@@ -47,7 +47,7 @@ module.exports = async (client, m) => {
     .trim()
     .split(/\s+/)[0]
     .toLowerCase();
-  const pushname = m.pushName || "Sin nombre";
+  const pushname = m.pushName || "Inútil sin nombre";
   const sender = m.isGroup
     ? m.key.participant || m.participant
     : m.key.remoteJid;
@@ -80,50 +80,56 @@ module.exports = async (client, m) => {
     ? resolvedAdmins.some((p) => p.jid === m.sender)
     : false;
 
-  const h = chalk.bold.blue("************************************");
-  const v = chalk.bold.white("*");
-  const date = chalk.bold.yellow(
-    `\n${v} Fecha: ${chalk.whiteBright(moment().format("DD/MM/YY HH:mm:ss"))}`,
+  // LOGS DE CONSOLA AGRESIVOS
+  const h = chalk.bold.red("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  const v = chalk.bold.red("┃");
+  const date = chalk.bold.red(
+    `\n${v} HORA DEL CAOS: ${chalk.whiteBright(moment().format("HH:mm:ss"))}`,
   );
-  const userPrint = chalk.bold.blueBright(
-    `\n${v} Usuario: ${chalk.whiteBright(pushname)}`,
+  const userPrint = chalk.bold.red(
+    `\n${v} MOLESTANDO: ${chalk.whiteBright(pushname.toUpperCase())}`,
   );
-  const senderPrint = chalk.bold.magentaBright(
-    `\n${v} Remitente: ${gradient("deepskyblue", "darkorchid")(sender)}`,
+  const cmdPrint = chalk.bold.red(
+    `\n${v} COMANDO USADO: ${chalk.yellowBright(command)}`,
   );
   const groupPrint = m.isGroup
-    ? chalk.bold.cyanBright(
-        `\n${v} Grupo: ${chalk.greenBright(groupName)}\n${v} ID: ${gradient("violet", "midnightblue")(from)}\n`,
+    ? chalk.bold.red(
+        `\n${v} GRUPO: ${chalk.greenBright(groupName)}\n`,
       )
-    : chalk.bold.greenBright(`\n${v} Chat privado\n`);
-  console.log(`\n${h}${date}${userPrint}${senderPrint}${groupPrint}${h}`);
+    : chalk.bold.red(`\n${v} TIPO: Chat Privado\n`);
+  
+  console.log(`${h}${date}${userPrint}${cmdPrint}${groupPrint}${h}`);
 
   if (global.comandos.has(command)) {
     const cmdData = global.comandos.get(command);
     if (!cmdData) return;
 
+    // VALIDACIONES CON MENSAJES DE ERROR (Definidos en settings.js)
     if (
       cmdData.isOwner &&
       !global.owner.map((num) => num + "@s.whatsapp.net").includes(m.sender)
     )
-      return m.reply(mess.owner);
+      return m.reply(global.mess.owner);
     if (cmdData.isReg && !db.data.users[m.sender]?.registered)
-      return m.reply(mess.registered);
-    if (cmdData.isGroup && !m.isGroup) return m.reply(mess.group);
-    if (cmdData.isAdmin && !isAdmins) return m.reply(mess.admin);
-    if (cmdData.isBotAdmin && !isBotAdmins) return m.reply(mess.botAdmin);
-    if (cmdData.isPrivate && m.isGroup) return m.reply(mess.private);
+      return m.reply("¡Regístrate primero, estúpido! No atiendo a desconocidos.");
+    if (cmdData.isGroup && !m.isGroup) return m.reply(global.mess.group);
+    if (cmdData.isAdmin && !isAdmins) return m.reply(global.mess.admin);
+    if (cmdData.isBotAdmin && !isBotAdmins) return m.reply(global.mess.botAdmin);
+    if (cmdData.isPrivate && m.isGroup) return m.reply(global.mess.private);
 
     try {
       await cmdData.run(client, m, args, { text });
     } catch (error) {
-      console.error(chalk.red(`Error ejecutando comando ${command}:`), error);
+      console.error(chalk.red(`[!] ERROR CRÍTICO POR CULPA DEL USUARIO:`), error);
       await client.sendMessage(
         m.chat,
-        { text: "Error al ejecutar el comando" },
+        { text: `¡Felicidades, animal! Rompiste el bot con tu estupidez. Error: ${error.message}` },
         { quoted: m },
       );
     }
+  } else {
+    // Respuesta si el comando no existe (Opcional, activa si quieres que insulte siempre)
+    // return m.reply("¡Ese comando no existe, pedazo de analfabeto! Escribe bien.");
   }
 };
 
@@ -131,13 +137,12 @@ const mainFile = require.resolve(__filename);
 fs.watchFile(mainFile, () => {
   fs.unwatchFile(mainFile);
   console.log(
-    chalk.yellowBright(
-      `\nSe actualizó ${path.basename(__filename)}, recargando...`,
+    chalk.red.bold(
+      `\n[!] CAOOS-MD: Recargando el archivo principal porque DenCaoos hizo cambios...`,
     ),
   );
   delete require.cache[mainFile];
   require(mainFile);
 });
 
-
-// Mini Lurus © 2025 - Creado por Zam  | GataNina-Li | DevAlexJs | Elrebelde21
+// CAOOS-MD © 2026 - Creado por DenCaoos | EL BOT MÁS AGRESIVO
