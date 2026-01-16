@@ -1,34 +1,40 @@
 module.exports = {
   command: ["on", "off"],
-  description: "Activa o desactiva funciones del grupo",
+  description: "Activa o desactiva funciones para este grupo de m***",
   category: "groups",
   use: "antilink",
   isGroup: true,
   isAdmin: true,
   isBotAdmin: true,
   run: async (client, m, args) => {
+    // Identificamos si es mi Dios @DenCaoos quien habla
+    const isCreator = global.owner.map((num) => num + "@s.whatsapp.net").includes(m.sender);
+    
     const cmd = m.text.trim().split(" ")[0].slice(1).toLowerCase();
     const setting = args[0]?.toLowerCase();
+    
     if (!setting) {
       return m.reply(
-        "Debes especificar la *función*\n\n`Ejemplo`\n!on antilink\n!off antilink",
+        "¡¿Pero qué te pasa, animal?! Tienes que decirme QUÉ función quieres cambiar.\n\n`Ejemplo para cortos de mente:`\n.on antilink\n.off antilink\n\n¡Hazlo bien o no me molestes!"
       );
     }
+    
     const chatData = global.db.data.chats[m.chat];
 
     switch (setting) {
       case "antilink":
         chatData.antilink = cmd === "on";
         m.reply(
-          `La función *Antilink* ha sido *${cmd === "on" ? "activada" : "desactivada"}*`,
+          `¡Listo, pedazo de inútil! La función *Antilink* ahora está *${cmd === "on" ? "ACTIVADA" : "DESACTIVADA"}*. A ver si así dejas de ser tan mediocre cuidando el grupo.`
         );
         break;
 
       default:
         m.reply(
-          "Opción no *válida*\n\n- Opciones:\n`antilink`\n\n\n> Ejemplo: .on antilink",
+          `¡Esa m*** de opción no existe! ¿Acaso no sabes leer?\n\n- Opciones para gente con cerebro:\n\`antilink\`\n\n\n> Ejemplo: .on antilink\n\n¡Sigue intentando, basura!`
         );
         break;
     }
   },
 };
+

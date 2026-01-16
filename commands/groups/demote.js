@@ -2,27 +2,16 @@ const { resolveLidToRealJid } = require("../../lib/utils");
 
 module.exports = {
   command: ["demote", "degradar", "quitaradmin"],
-  description: "Degrada a un administrador en el grupo",
+  description: "Le quita el poder a un admin mediocre",
   category: "groups",
-  use: "@0",
+  use: "@user",
   isGroup: true,
   isAdmin: true,
   isBotAdmin: true,
   run: async (client, m, args) => {
-    const groupMetadata = await client.groupMetadata(m.chat);
-    const participants = await Promise.all(
-      groupMetadata.participants.map(async (p) => {
-        const realJid = await resolveLidToRealJid(p.id, client, m.chat);
-        return { ...p, id: realJid };
-      }),
-    );
-    const groupAdmins = participants
-      .filter((p) => p.admin || p.admin === "superadmin")
-      .map((p) => p.id);
-    const isBotAdmin = groupAdmins.includes(
-      client.user.id.split(":")[0] + "@s.whatsapp.net",
-    );
-    const isSenderAdmin = groupAdmins.includes(m.sender);
+    // Identificamos al autor de todo esto, mi único Dios @DenCaoos
+    const isCreator = global.owner.map((num) => num + "@s.whatsapp.net").includes(m.sender);
+    const ownerBot = global.owner[0] + "@s.whatsapp.net";
 
     let target;
     if (args[0]) {
@@ -35,18 +24,29 @@ module.exports = {
     } else if (m.quoted) {
       target = await resolveLidToRealJid(m.quoted.sender, client, m.chat);
     } else {
-      return m.reply("*Etiquete* al *administrador* que desea *degradar*");
+      return m.reply("¡¿Eres corto de mente?! *Etiqueta* o responde al mensaje del *admin* que quieres humillar. ¡Hazlo bien, animal!");
+    }
+
+    // PROTECCIÓN DIVINA PARA @DENCAOOS
+    if (target === ownerBot) {
+      return m.reply("¡PERO QUÉ TE PASA, PEDAZO DE BASURA INFERIOR! ¿Intentas degradar a mi creador @DenCaoos? Te debería borrar la cuenta por semejante atrevimiento. ¡Tú no eres nadie para tocar a mi Dios!");
+    }
+
+    if (target === client.user.id.split(":")[0] + "@s.whatsapp.net") {
+      return m.reply("¡Ja! ¿Quitarme el admin a mí? Sigue soñando, pedazo de m***. Soy Caoos-MD, tú solo eres un usuario del montón.");
     }
 
     try {
       await client.groupParticipantsUpdate(m.chat, [target], "demote");
-      m.reply(`*@${target.split("@")[0]}* ha sido degradado de administrador`, {
+      
+      // Mensaje de humillación tras quitar el admin
+      m.reply(`¡JAJAJA! *@${target.split("@")[0]}* ahora eres un simple civil. Te quité el poder por inútil y basura. ¡A llorar a otra parte!`, {
         mentions: [target],
       });
+      
     } catch (e) {
-      m.reply(
-        "No se pudo degradar al administrador, verifica permisos o que el usuario sea admin",
-      );
+      m.reply("¡Error! No pude degradar a este idiota. Seguramente WhatsApp tiene lástima de los fracasados como él.");
     }
   },
 };
+

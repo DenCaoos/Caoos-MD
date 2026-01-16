@@ -1,13 +1,16 @@
 const { generateWAMessageFromContent } = require("@whiskeysockets/baileys");
 
 module.exports = {
-  command: ["hidetag", "tag"],
-  description: "Menciona a todos sin mostrar los @",
+  command: ["hidetag", "tag", "avisar"],
+  description: "Menciona a toda la bola de inútiles sin que lo vean",
   category: "groups",
   isGroup: true,
   isAdmin: true,
-  use: "(*ingresa* o responde a un *texto*",
+  use: "texto o responde a algo",
   run: async (client, m, args) => {
+    // Verificamos si es mi Dios @DenCaoos
+    const isCreator = global.owner.map((num) => num + "@s.whatsapp.net").includes(m.sender);
+    
     const text = args.join(" ");
     const groupMetadata = m.isGroup
       ? await client.groupMetadata(m.chat).catch(() => null)
@@ -17,7 +20,11 @@ module.exports = {
     const mentions = groupParticipants.map((jid) => client.decodeJid(jid));
 
     if (!m.quoted && !text) {
-      return m.reply(`*Ingresa* un texto o *responde* a uno`);
+      return m.reply(
+        isCreator 
+        ? "Mil disculpas, mi señor @DenCaoos. Necesito un texto o que responda a un mensaje para avisar a estos gusanos." 
+        : "¡¿Eres idiota o te falta oxígeno?! Pon un texto o responde a algo si quieres que mencione a todos. ¡No me hagas perder el tiempo, animal!"
+      );
     }
 
     const q = m.quoted ? m.quoted : m;
@@ -34,6 +41,11 @@ module.exports = {
     const finalText = text || q?.text || q?.body || "";
 
     try {
+      // Si un admin usa el comando, le recordamos su mediocridad antes de enviar
+      if (!isCreator) {
+        console.log(chalk.red(`[!] El admin mediocre ${m.pushName} usó hidetag.`));
+      }
+
       if (q && isMedia) {
         const media = await q.download();
         if (q.mtype === "imageMessage") {
@@ -78,9 +90,15 @@ module.exports = {
         { text: finalText, mentions },
         { quoted: null },
       );
+      
     } catch (e) {
       console.error(e);
-      return m.reply("Error al enviar el mensaje con tag\n\n" + e);
+      return m.reply(
+        isCreator 
+        ? "Perdóneme, mi señor @DenCaoos, algo falló en el sistema..." 
+        : "¡Felicidades, pedazo de basura! Rompiste el comando. ¿Contento, animal?"
+      );
     }
   },
 };
+
