@@ -1,9 +1,9 @@
 /**
  * ========================================================
- * CAOOS-MD - EL BOT MÁS AGRESIVO DE WHATSAPP
+ * CAOOS-MD - PROPIEDAD EXCLUSIVA DE @DENCAOOS
  * ========================================================
  * Creador: DenCaoos (@DenCaoos)
- * Año: 2026 | No toques los créditos o te vas al carajo.
+ * Año: 2026 | Si robas esto, eres una basura sin vida.
  * ========================================================
  **/
 
@@ -23,10 +23,14 @@ const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
 const os = require("os");
+const qrcode = require("qrcode-terminal");
+const parsePhoneNumber = require("awesome-phonenumber");
 const { smsg } = require("./lib/message");
+const { app, server } = require("./lib/server");
 const { Boom } = require("@hapi/boom");
 const { exec } = require("child_process");
 
+// ESTÉTICA AGRESIVA DE CONSOLA
 const print = (label, value) =>
   console.log(
     `${chalk.red.bold("┃")} ${chalk.white.bold(label.padEnd(16))}${chalk.red.bold("»")} ${chalk.gray(value)}`,
@@ -38,80 +42,106 @@ const question = (text) => {
     output: process.stdout,
   });
   return new Promise((resolve) => {
-    rl.question(text, (ans) => { rl.close(); resolve(ans); });
+    rl.question(text, resolve);
   });
 };
+const usePairingCode = true;
 
 const log = {
-  info: (msg) => console.log(chalk.bgCyan.black.bold(` CAOOS-MD `), chalk.cyan(`[!] ${msg}`)),
-  success: (msg) => console.log(chalk.bgGreen.black.bold(` LISTO `), chalk.greenBright(`[✓] ${msg}`)),
-  warn: (msg) => console.log(chalk.bgYellow.black.bold(` ¿ERES TONTO? `), chalk.yellow(`[?] ${msg}`)),
-  error: (msg) => console.log(chalk.bgRed.white.bold(` ¡BASURA! `), chalk.redBright(`[X] ${msg}`)),
+  info: (msg) => console.log(chalk.bgCyan.black.bold(` CAOOS-MD `), chalk.cyan(msg)),
+  success: (msg) =>
+    console.log(chalk.bgGreen.black.bold(` LISTO `), chalk.greenBright(msg)),
+  warn: (msg) =>
+    console.log(
+      chalk.bgYellow.black.bold(` ¿ERES IDIOTA? `),
+      chalk.yellow(msg),
+    ),
+  warning: (msg) =>
+    console.log(chalk.bgRed.white.bold(` ¡CUIDADO! `), chalk.red(msg)),
+  error: (msg) =>
+    console.log(chalk.bgRed.white.bold(` ¡BASURA! `), chalk.redBright(msg)),
 };
 
-// LIMPIEZA Y BANNER HOSTIL
-console.clear();
-console.log(chalk.red.bold(`
- ██████╗ █████╗  ██████╗  ██████╗ ███████╗    ███╗   ███╗██████╗ 
-██╔════╝██╔══██╗██╔═══██╗██╔═══██╗██╔════╝    ████╗ ████║██╔══██╗
-██║     ███████║██║   ██║██║   ██║███████╗    ██╔████╔██║██║  ██║
-██║     ██╔══██║██║   ██║██║   ██║╚════██║    ██║╚██╔╝██║██║  ██║
-╚██████╗██║  ██║╚██████╔╝╚██████╔╝███████║    ██║ ╚═╝ ██║██████╔╝
- ╚═════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚══════╝    ╚═╝     ╚═╝╚═════╝ 
-    >>> CREADO POR DenCaoos | IG: @DenCaoos <<<`));
+const userInfoSyt = () => {
+  try {
+    return os.userInfo().username;
+  } catch (e) {
+    return "desconocido";
+  }
+};
 
-print("ESTADO", "Inyectando código de m***...");
-print("CPU", os.cpus()[0]?.model.trim());
-print("RAM", `${(os.freemem() / 1024 / 1024).toFixed(0)}MB Libres de basura`);
-print("VERSIÓN", `CAOOS-MD v${require("./package.json").version}`);
+console.clear();
+console.log(
+  chalk.red.bold(
+    `╔═════[ ${chalk.white(`PROPIEDAD DE @DENCAOOS`)} ]═════╗`,
+  ),
+);
+print("SISTEMA", `${os.platform()} ${os.release()} ${os.arch()}`);
+print("ACTIVIDAD", `${Math.floor(os.uptime() / 3600)} h de puro poder`);
+print("VERSIÓN", `v${require("./package.json").version}`);
 print("NODE.JS", process.version);
-print("FECHA", new Date().toLocaleString("es-ES", { timeZone: "America/Mexico_City" }));
-console.log(chalk.red.bold("╚" + "═".repeat(50)));
+print("BAILEYS", `WhiskeySockets/baileys`);
+print(
+  "TIEMPO REAL",
+  new Date().toLocaleString("es-MX", {
+    timeZone: "America/Mexico_City",
+    hour12: false,
+  }),
+);
+console.log(chalk.red.bold("╚" + "═".repeat(40)));
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState(global.sessionName);
   const { version } = await fetchLatestBaileysVersion();
 
+  console.info = () => {};
+  console.debug = () => {};
   const client = makeWASocket({
     version,
     logger: pino({ level: "silent" }),
     printQRInTerminal: false,
-    browser: ["Caoos-MD", "Safari", "1.0.0"],
+    browser: ["Caoos-MD", "Chrome", "1.0.0"],
     auth: state,
   });
 
-  // VINCULACIÓN POR CÓDIGO (SOLO PARA MI SEÑOR)
+  // VINCULACIÓN: LÓGICA INTACTA, TEXTOS AGRESIVOS
   if (!client.authState.creds.registered) {
-    console.log(chalk.bgRed.white.bold("\n ¡MUEVE TU TRASERO O NO HAGO NADA! "));
     const phoneNumber = await question(
-      log.warn("Escribe tu maldito número de WhatsApp:\n") +
-      chalk.red(" > ")
+      log.warn("¡ESCRIBE TU MALDITO NÚMERO YA!\n") +
+        log.info("Ejemplo para cortos de mente: 5212345678900\n") + chalk.red(" > ")
     );
     try {
-      const pairing = await client.requestPairingCode(phoneNumber.trim().replace(/[^0-9]/g, ''), "CAOOSMD7");
-      console.log(chalk.red("\n ──────────────────────────────────────────────────"));
-      console.log(chalk.white("  TU CÓDIGO DE ACCESO: ") + chalk.black.bgWhite.bold(`  ${pairing}  `));
-      console.log(chalk.red(" ──────────────────────────────────────────────────\n"));
-      log.info("Ponlo rápido antes de que me aburra de servirte.");
+      log.info("Solicitando código... Espérate, animal.");
+      const pairing = await client.requestPairingCode(phoneNumber, "1234MINI");
+      
+      // CÓDIGO EN ROJO SANGRE COMO USTED PIDÓ
+      console.log(chalk.red.bold("\n┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"));
+      console.log(chalk.red.bold("┃") + chalk.white.bold(" CÓDIGO DE ACCESO: ") + chalk.bgBlack.redBright.bold(`  ${pairing}  `) + chalk.red.bold(" ┃"));
+      console.log(chalk.red.bold("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"));
+      
+      log.success("Ahí tienes tu código. Úsalo rápido antes de que expire, basura.");
     } catch (err) {
-      log.error("Hiciste algo mal, inútil. Borrando basura de sesión...");
-      exec(`rm -rf ./${global.sessionName}/*`);
+      log.error("Hiciste algo mal, pedazo de estúpido. Borrando basura...");
+      exec("rm -rf ./lurus_session/*");
       process.exit(1);
     }
   }
 
   await global.loadDatabase();
-  log.success("Base de datos cargada. Ya puedes empezar a molestar a la gente.");
+  log.success("Base de datos inyectada correctamente. Ya puedes molestar gente.");
+
+  client.sendText = (jid, text, quoted = "", options) =>
+    client.sendMessage(jid, { text, ...options }, { quoted });
 
   client.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === "close") {
       const reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-      log.warn(`Se cerró esta m*** de conexión (Razón: ${reason}). Reconectando...`);
+      log.warning(`Se cerró esta m*** de conexión (Razón: ${reason}). Reconectando...`);
       startBot();
     }
     if (connection === "open") {
-      log.success("¡CAOOS-MD ESTÁ VIVO! Tiemblen, par de idiotas.");
+      log.success("¡CAOOS-MD ESTÁ VIVO! Tiemblen, gusanos.");
     }
   });
 
@@ -119,15 +149,15 @@ async function startBot() {
     try {
       let m = messages[0];
       if (!m.message) return;
-      m.message = Object.keys(m.message)[0] === "ephemeralMessage" ? m.message.ephemeralMessage.message : m.message;
+      m.message =
+        Object.keys(m.message)[0] === "ephemeralMessage"
+          ? m.message.ephemeralMessage.message
+          : m.message;
       if (m.key && m.key.remoteJid === "status@broadcast") return;
-      
       m = smsg(client, m);
-      
-      // Aquí el bot decide si ser amable con @DenCaoos o un asco con los demás
       require("./main")(client, m, messages);
     } catch (err) {
-      log.error("Fallo al procesar un mensaje estúpido: " + err);
+      log.error("Fallo al procesar un mensaje estúpido.");
     }
   });
 
@@ -135,7 +165,9 @@ async function startBot() {
     if (!jid) return jid;
     if (/:\d+@/gi.test(jid)) {
       const decode = jidDecode(jid) || {};
-      return decode.user && decode.server ? decode.user + "@" + decode.server : jid;
+      return decode.user && decode.server
+        ? decode.user + "@" + decode.server
+        : jid;
     }
     return jid;
   };
@@ -144,12 +176,10 @@ async function startBot() {
 }
 
 startBot();
-
-// MONITOR DE CAMBIOS AGRESIVO
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
   fs.unwatchFile(file);
-  console.log(chalk.red.bold(`\n[!] @DenCaoos actualizó el núcleo. Recargando basura...\n`));
+  console.log(chalk.red.bold(`\n[!] @DenCaoos actualizó mi núcleo. Reiniciando por mi dueño...\n`));
   delete require.cache[file];
   require(file);
 });

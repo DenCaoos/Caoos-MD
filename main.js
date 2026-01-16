@@ -33,9 +33,9 @@ module.exports = async (client, m) => {
   initDB(m);
   antilink(client, m);
 
-  const prefa = ['.', '!', '#', '/']
-  const prefix = prefa.find((p) => body.startsWith(p))
-  if (!prefix) return
+  const prefa = ['.', '!', '#', '/'];
+  const prefix = prefa.find((p) => body.startsWith(p));
+  if (!prefix) return;
 
   const from = m.key.remoteJid;
   const args = body.trim().split(/ +/).slice(1);
@@ -47,102 +47,77 @@ module.exports = async (client, m) => {
     .trim()
     .split(/\s+/)[0]
     .toLowerCase();
+  
   const pushname = m.pushName || "Inútil sin nombre";
-  const sender = m.isGroup
-    ? m.key.participant || m.participant
-    : m.key.remoteJid;
 
-  let groupMetadata,
-    groupAdmins,
-    resolvedAdmins = [],
-    groupName = "";
+  // --- IDENTIFICACIÓN DE PODER ABSOLUTO ---
+  const senderNumber = m.sender.split('@')[0].replace(/[^0-9]/g, '');
+  const isCreator = "34634192646" === senderNumber || m.fromMe; 
+  const isRegistered = global.db.data.users[m.sender]?.registered;
+
+  // --- FILTRO DE ACCESO AGRESIVO ---
+  if (!isCreator) {
+    if (!isRegistered && command !== 'reg' && command !== 'registrar') {
+      const mensajesBloqueo = [
+        `🤮 **¡ALTO AHÍ, ESCORIA!**\n\nNo tienes permiso para usar el comando *${prefix}${command}*. Eres un don nadie. Usa *.reg* para registrarte o lárgate.`,
+        `🤨 ¿Te crees con derecho a usar *${prefix}${command}* sin estar fichado?\n\nPrimero usa *.reg* para que @DenCaoos sepa qué clase de basura eres.`,
+        `💩 **ERROR DE JERARQUÍA.**\n\nRegístrate usando el comando *.reg* si quieres que te responda, infeliz.`
+      ];
+      return m.reply(mensajesBloqueo[Math.floor(Math.random() * mensajesBloqueo.length)]);
+    }
+  } else {
+    console.log(chalk.yellowBright(`👑 ORDEN DEL SOBERANO @DenCaoos: ${prefix}${command}`));
+  }
+
+  // --- LÓGICA DE GRUPOS ---
+  let groupMetadata, groupName = "", resolvedAdmins = [];
   if (m.isGroup) {
     groupMetadata = await client.groupMetadata(m.chat).catch((_) => null);
     groupName = groupMetadata?.subject || "";
-    groupAdmins =
-      groupMetadata?.participants.filter(
-        (p) => p.admin === "admin" || p.admin === "superadmin",
-      ) || [];
+    const groupAdmins = groupMetadata?.participants.filter(p => p.admin) || [];
     resolvedAdmins = await Promise.all(
       groupAdmins.map((adm) =>
-        resolveLidToRealJid(adm.jid, client, m.chat).then((realJid) => ({
-          ...adm,
-          jid: realJid,
-        })),
-      ),
+        resolveLidToRealJid(adm.jid, client, m.chat).then((realJid) => ({ ...adm, jid: realJid }))
+      )
     );
   }
 
-  const isBotAdmins = m.isGroup
-    ? resolvedAdmins.some((p) => p.jid === botJid)
-    : false;
-  const isAdmins = m.isGroup
-    ? resolvedAdmins.some((p) => p.jid === m.sender)
-    : false;
+  const isBotAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === botJid) : false;
+  const isAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === m.sender) : false;
 
-  // LOGS DE CONSOLA AGRESIVOS
-  const h = chalk.bold.red("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  const v = chalk.bold.red("┃");
-  const date = chalk.bold.red(
-    `\n${v} HORA DEL CAOS: ${chalk.whiteBright(moment().format("HH:mm:ss"))}`,
-  );
-  const userPrint = chalk.bold.red(
-    `\n${v} MOLESTANDO: ${chalk.whiteBright(pushname.toUpperCase())}`,
-  );
-  const cmdPrint = chalk.bold.red(
-    `\n${v} COMANDO USADO: ${chalk.yellowBright(command)}`,
-  );
-  const groupPrint = m.isGroup
-    ? chalk.bold.red(
-        `\n${v} GRUPO: ${chalk.greenBright(groupName)}\n`,
-      )
-    : chalk.bold.red(`\n${v} TIPO: Chat Privado\n`);
-  
-  console.log(`${h}${date}${userPrint}${cmdPrint}${groupPrint}${h}`);
+  // LOGS DE CONSOLA
+  console.log(chalk.bold.red("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
+  console.log(chalk.bold.red(`┃ MOLESTANDO: ${chalk.whiteBright(pushname.toUpperCase())}`));
+  console.log(chalk.bold.red(`┃ COMANDO: ${chalk.yellowBright(command)}`));
+  console.log(chalk.bold.red("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
 
   if (global.comandos.has(command)) {
     const cmdData = global.comandos.get(command);
     if (!cmdData) return;
 
-    // VALIDACIONES CON MENSAJES DE ERROR (Definidos en settings.js)
-    if (
-      cmdData.isOwner &&
-      !global.owner.map((num) => num + "@s.whatsapp.net").includes(m.sender)
-    )
-      return m.reply(global.mess.owner);
-    if (cmdData.isReg && !db.data.users[m.sender]?.registered)
-      return m.reply("¡Regístrate primero, estúpido! No atiendo a desconocidos.");
+    // Estadísticas
+    global.db.data.stats = global.db.data.stats || {};
+    global.db.data.users[m.sender].count = (global.db.data.users[m.sender].count || 0) + 1;
+    global.db.data.stats[command] = (global.db.data.stats[command] || 0) + 1;
+
+    // VALIDACIONES (Usted se salta la de Owner porque ya es Creator)
+    if (cmdData.isOwner && !isCreator) return m.reply(global.mess.owner);
     if (cmdData.isGroup && !m.isGroup) return m.reply(global.mess.group);
     if (cmdData.isAdmin && !isAdmins) return m.reply(global.mess.admin);
     if (cmdData.isBotAdmin && !isBotAdmins) return m.reply(global.mess.botAdmin);
-    if (cmdData.isPrivate && m.isGroup) return m.reply(global.mess.private);
 
     try {
       await cmdData.run(client, m, args, { text });
     } catch (error) {
-      console.error(chalk.red(`[!] ERROR CRÍTICO POR CULPA DEL USUARIO:`), error);
-      await client.sendMessage(
-        m.chat,
-        { text: `¡Felicidades, animal! Rompiste el bot con tu estupidez. Error: ${error.message}` },
-        { quoted: m },
-      );
+      await client.sendMessage(m.chat, { text: `¡Error! Rompiste algo: ${error.message}` }, { quoted: m });
     }
-  } else {
-    // Respuesta si el comando no existe (Opcional, activa si quieres que insulte siempre)
-    // return m.reply("¡Ese comando no existe, pedazo de analfabeto! Escribe bien.");
   }
 };
 
 const mainFile = require.resolve(__filename);
 fs.watchFile(mainFile, () => {
   fs.unwatchFile(mainFile);
-  console.log(
-    chalk.red.bold(
-      `\n[!] CAOOS-MD: Recargando el archivo principal porque DenCaoos hizo cambios...`,
-    ),
-  );
   delete require.cache[mainFile];
   require(mainFile);
 });
 
-// CAOOS-MD © 2026 - Creado por DenCaoos | EL BOT MÁS AGRESIVO
